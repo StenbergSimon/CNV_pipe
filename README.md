@@ -8,9 +8,13 @@ Developed by: Simon Stenberg
 Dependencies
 --------
 Bedtools (Developed in v2.17.0)
+
 Samtools (Developed in 0.1.18)
+
 Bamtools (Developed in 2.3.0)
+
 R (developed in R version 3.1.0 (2014-04-10) -- "Spring Dance") - if -rall option is used
+
 R library ggplot2 (if -rall options is used)
 
 Preceeding data handling
