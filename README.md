@@ -17,6 +17,11 @@ R (developed in R version 3.1.0 (2014-04-10) -- "Spring Dance") - if -rall optio
 
 R library ggplot2 (if -rall options is used)
 
+Install
+-------
+
+Copy plot_cnv.r into ~/bin/
+
 Preceeding data handling
 -------
 * You need at least 1 set of reads aligned to a reference genome/contigs
