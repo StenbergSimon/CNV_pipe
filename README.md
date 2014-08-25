@@ -34,12 +34,20 @@ Options
 --------
 
 -w [int] sliding window size, bigger window decrease computanional time, decrease sensitivity and decrease false posetive rate (scales with read depth) Default: 500
+
 -co [int] Cutoff value of log2 change compared to reference or name median to be called and placed in file
+
 -rall prints out all window values even if cutoff is met or not, placed in separate folder (/reports/), also produces .pdf files with plots of all names
+
 -incr [int] increments of the sliding window, controls overlap. Default: [windowsize] 
+
 -mapq [int] mapping quality cutoff to include in the analysis. Default: [0]
+
 -r Reference.bam reference alignment
+
 -regex [regex] supply own regex to recognize the names in the alignment file, does not work at the moment. Default: (SN:)([^\s]+)
+
 -h show help
+
 --help show help
 
