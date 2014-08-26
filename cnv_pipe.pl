@@ -465,7 +465,7 @@ sub output_results_with_ref{
 	my $i = 0;
 	
 	print "#CNV_Analysis\n#Sample:$main::usedbam\n#Reference:$main::usedref\n#Windowsize:$windowsize\n#Cutoff:$cutoff\n#Increment:$increment\n#Mode=Control\n";
-	print "#Chrom/Contig\tLog2_Ratio\tReference_Average\tSample_Average\tDifference\tWindowStart\tWindowStop\n";
+	print "#Chrom/Contig\tLog2_Ratio\tReference_Average\tSample_Average\tWindowStart\tWindowStop\n";
 	
 	foreach (@entries){
 		if($_ ne " "){
@@ -486,8 +486,6 @@ sub output_results_with_ref{
 					print $array[($i2+4)];
 					print "\t";
 					print $array[($i2+5)];
-					print "\t";
-					print $array[($i2+6)];
 					print "\n";
 					
 					$i2 = $i2 + 7;
