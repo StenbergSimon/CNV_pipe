@@ -60,3 +60,7 @@ Options
 
 --help show help
 
+Additional Info
+--------
+You might find interesting scripts in variant_calling repo to complement the cnv_pipe.pl
+
