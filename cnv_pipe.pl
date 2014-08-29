@@ -473,7 +473,7 @@ sub output_results_with_ref{
 			
 			my @array = split("," , $_);
 			my $i2 = 0;	
-			while(($i2 + 6) <= scalar(@array)){
+			while(($i2 + 5) <= scalar(@array)){
 					
 					print $array[$i2];
 					print "\t";
@@ -488,7 +488,7 @@ sub output_results_with_ref{
 					print $array[($i2+5)];
 					print "\n";
 					
-					$i2 = $i2 + 7;
+					$i2 = $i2 + 6;
 				}
 			}
 		}
