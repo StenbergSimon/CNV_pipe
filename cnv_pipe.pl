@@ -35,6 +35,8 @@ my $path = getcwd;
 my $normalizer = 0;
 my $splitbamref;
 my $increment = $options[7];
+my $samplecovsum = 0;
+my $referencecovsum = 0;
 
 our $usedbam = trimfilename($bam);
 
@@ -186,7 +188,7 @@ else{
 					push (@refarray, $5);
 					}
 			}
-		
+	#Normaliation 1:
 	#	my $refmed = median(\@refarray);
 	#	my $samplemed = median(\@samplearray);
 	#	if ($refmed == 0){
@@ -196,21 +198,36 @@ else{
 	#	else{
 	#		$normalizer = $samplemed / $refmed;
 	#	}
-	open (ST, "samtools view -q $mapq -c $reference|") || die($!);
-		while ($line = <ST>){
-					$refreadcount = $line;
-					$refreadcount =~ s/\n//;
-					$refreadcount =~s/\s//;
-		}
 
-	open (ST, "samtools view -q $mapq -c $bam|") || die($!);
-                while ($line = <ST>){
-                                        $samplereadcount = $line;
-                                        $samplereadcount =~ s/\n//;
-                                        $samplereadcount =~s/\s//;
-                }
-	$normalizer = $refreadcount / $samplereadcount;
-			
+	#Normalization 2:
+	#open (ST, "samtools view -q $mapq -c $reference|") || die($!);
+	#	while ($line = <ST>){
+	#				$refreadcount = $line;
+	#				$refreadcount =~ s/\n//;
+	#				$refreadcount =~s/\s//;
+	#	}
+	#
+	#open (ST, "samtools view -q $mapq -c $bam|") || die($!);
+        #        while ($line = <ST>){
+        #                                $samplereadcount = $line;
+        #                                $samplereadcount =~ s/\n//;
+        #                                $samplereadcount =~s/\s//;
+        #        }
+	#$normalizer = $refreadcount / $samplereadcount;
+	
+	#Normalization 3:
+	
+	foreach (@samplearray){
+		unless($_ == 0){
+			$samplecovsum = $samplecovsum + $_;
+			}
+		} 
+	foreach (@refarray){
+		unless($_ == 0){
+			$referencecovsum = $referencecovsum + $_;
+			}
+		}
+	$normalizer = $referencecovsum / $samplecovsum;		
 
 
 	my $namecounter = 0;
