@@ -18,11 +18,13 @@ x$meanpos <- rowMeans(subset(x, select = c(V2,V3)), na.rm = TRUE)
 col_headings <- c('Log2_ratio', 'V2', 'V3', 'Cutoff', 'Position')
 names(x) <- col_headings
 
+wi <- (nrow(x) * 0.0154) + 8.1692
+
 #cutoff <- data.frame( z = c(0,(max(x))), b = 0, cutoff = factor(0) )
 #print (cutoff)
 #Save as pdf
 filename<-paste(args[1], '.pdf', sep="")
-pdf(filename)
+pdf(filename, height=9, width=w, height=9, width=wi)
 
 #Plot the log2 values over the chr
 
