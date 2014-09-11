@@ -24,7 +24,7 @@ wi <- (nrow(x) * 0.0154) + 8.1692
 #print (cutoff)
 #Save as pdf
 filename<-paste(args[1], '.pdf', sep="")
-pdf(filename, height=9, width=w, height=9, width=wi)
+pdf(filename, height=9, width=wi)
 
 #Plot the log2 values over the chr
 
