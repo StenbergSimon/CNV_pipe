@@ -64,3 +64,8 @@ Additional Info
 --------
 You might find interesting scripts in variant_calling repo to complement the cnv_pipe.pl
 
+
+Known Bugs
+-------
+
+Increments =! Windowsize will currently give wrongly scaled outputs in position
