@@ -148,12 +148,15 @@ if ($reference eq 0){
 					
 					print REPORT $quote, "\t", $startpos, "\t", $endpos;
 					if($quote > $cutoff){
-						print REPORT "\t", 1, "\n"
-						}
-					else{
-						print REPORT "\t", 0, "\n"
-						}
-					}	
+                                                print REPORT "\t", 1, "\n";
+                                                }
+                                        elsif($quote < ((-1)*$cutoff)){
+                                                print REPORT "\t", -1, "\n";
+                                                }
+                                        else{
+                                                print REPORT "\t", 0, "\n";
+                                                }
+                                        }	
 			
 			$startpos = $startpos + $increment;
 					$endpos = $endpos + $increment;
