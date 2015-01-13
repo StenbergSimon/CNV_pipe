@@ -36,13 +36,11 @@ winsize, mapq, co, out= setDefaults(options)
 
 folder=os.path.dirname(options.file)
 
-#Remove?
-#filename= os.path.splitext(os.path.basename(options.file))[0]
-
 
 #CNV ouputfile:
 cnv_f = open(out, "w")
 #Call CNV_pipe with the options - save to cnv_file. Options are called from a list
 cnv_cmd = ["cnv_pipe.pl", options.file, "-w", winsize, "-mapq", mapq, "-co", co, "-rall"]
 call(cnv_cmd, stdout = cnv_f)
+
  
