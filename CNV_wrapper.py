@@ -7,9 +7,9 @@ from subprocess import call
 
 #Set the options that need to be set
 prsr = opt()
-prsr.add_option("-w", "--windowSize", dest="winsize", metavar="INT", default="500", help="Windowsize (bp) to be used to calculate log2ratio")
-prsr.add_option("-m", "--mappingQuality", dest="mapq", metavar="INT", default="0", help="Mapping quality cutoff for reads to be used in the calculation")
-prsr.add_option("-c", "--cutOff", dest="co", metavar="INT", default="0.5", help="Log2Ratio cut-off to be used to mark significant hits in the plots")
+prsr.add_option("-w", "--windowSize", dest="winsize", metavar="INT", default="500", help="Windowsize (bp) to be used to calculate log2ratio [Default:%default]")
+prsr.add_option("-m", "--mappingQuality", dest="mapq", metavar="INT", default="0", help="Mapping quality cutoff for reads to be used in the calculation [Default:%default]")
+prsr.add_option("-c", "--cutOff", dest="co", metavar="INT", default="0.5", help="Log2Ratio cut-off to be used to mark significant hits in the plots [Default:%default]")
 prsr.add_option("-f", "--file", dest="file", metavar="FILE", help="Input bam file to be analyzed")
 prsr.add_option("-o", "--ouput", dest="out", metavar="FILE", default="cnv_report.tsv",help="Report file to write output to")
 
@@ -30,6 +30,8 @@ def setDefaults(options):
 		options.out = "cnv_report.tsv"
 	return (options.winsize, options.mapq, options.co, options.out)
 
+
+""" PROGRAM START """
 winsize, mapq, co, out= setDefaults(options)
 
 #Get folder name
