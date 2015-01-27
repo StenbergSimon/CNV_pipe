@@ -3,7 +3,7 @@
 import os
 import sys
 from optparse import OptionParser as opt
-from subprocess import call
+import subprocess
 
 #Set the options that need to be set
 prsr = opt()
@@ -30,6 +30,8 @@ def setDefaults(options):
 		options.out = "cnv_report.tsv"
 	return (options.winsize, options.mapq, options.co, options.out)
 
+def writeRscript(options):
+	print
 
 """ PROGRAM START """
 winsize, mapq, co, out= setDefaults(options)
@@ -43,6 +45,6 @@ folder=os.path.dirname(options.file)
 cnv_f = open(out, "w")
 #Call CNV_pipe with the options - save to cnv_file. Options are called from a list
 cnv_cmd = ["cnv_pipe.pl", options.file, "-w", winsize, "-mapq", mapq, "-co", co, "-rall"]
-call(cnv_cmd, stdout = cnv_f)
-
+p = subprocess.Popen(cnv_cmd, cwd=folder, stdout = cnv_f)
+p.communicate()
  
