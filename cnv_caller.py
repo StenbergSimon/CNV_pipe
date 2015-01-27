@@ -6,6 +6,7 @@ import math
 samfile = "/Users/Simon/up_91_3.Founder_003_trimmed.sorted_rmdup_gc-corrected.bam"
 mapq_cutoff = 1
 window_size = 100
+path = "/Users/Simon/output/"
 
 outfile = file("test.out", "w")
 
@@ -74,7 +75,8 @@ for name, ln  in zip(NAMES, LENGTH):
 	while pos_end <= ln:
 	   pos_start, pos_end = windowIterator(pos_start, pos_end, window_size)
            window_mean = covScanner(sam, mapq_cutoff, name, pos_start, pos_end)
-           print  name, pos_start, pos_end, getLogratio(window_mean, name, chr_medians), window_mean, chr_medians[name]
+           out = file(os.path.join(path, name)
+	   print >>  out, pos_start, pos_end, getLogratio(window_mean, name, chr_medians)
         
 
 
