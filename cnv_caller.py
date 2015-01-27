@@ -65,7 +65,6 @@ def getLogratios(WINDOW_MEANS, name, chr_medians):
            win_logratio = 0
         else:
            win_logratio = math.log(win_logratio, 2)
-   #        print win_logratio, window_mean, median
         LOG2RATIOS.append(win_logratio)
     return LOG2RATIOS
 
@@ -127,7 +126,10 @@ class CovScanner():
                if reads.alignment.mapq >= mapq_cutoff:
                    cov = cov + 1
 	   WINDOW_COVS.append(cov)
-       window_mean = numpy.mean(WINDOW_COVS)    
+       if sum(WINDOW_COVS) > 0:
+           window_mean = numpy.mean(WINDOW_COVS)    
+       else:
+           window_mean = 0
        self.MEANS.append(window_mean)
        sam.close()
 
