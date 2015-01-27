@@ -13,10 +13,10 @@ sam = pysam.AlignmentFile(samfile, "rb")
 
 def covScanner(sam, mapq_cutoff, name, pos_start, pos_end):
     WINDOW_COVS = []
-    for pile in sam.pileup(name, pos_start, pos_end):
+    for pile in sam.pileup(name, pos_start, pos_end, truncate=True):
 	cov = 0
         for reads in pile.pileups:
-	    if reads.alignment.mapq > mapq_cutoff:
+	    if reads.alignment.mapq >= mapq_cutoff:
                 cov = cov + 1
 	WINDOW_COVS.append(cov)
     window_mean = float(sum(WINDOW_COVS)) / float(len(WINDOW_COVS))
@@ -48,7 +48,7 @@ def getMedianCov(sam, NAMES, LENGTH, mapq_cutoff):
        for pile in sam.pileup(name, 0, ln):
            cov = 0
            for reads in pile.pileups:
-              if reads.alignment.mapq > mapq_cutoff:
+              if reads.alignment.mapq >= mapq_cutoff:
                    cov = cov + 1
    	   COVS.append(cov)
        chr_median = median(COVS)
@@ -74,8 +74,16 @@ for name, ln  in zip(NAMES, LENGTH):
 	while pos_end <= ln:
 	   pos_start, pos_end = windowIterator(pos_start, pos_end, window_size)
            window_mean = covScanner(sam, mapq_cutoff, name, pos_start, pos_end)
-           print  name, pos_start, pos_end, getLogratio(window_mean, name, chr_medians)
+           print  name, pos_start, pos_end, getLogratio(window_mean, name, chr_medians), window_mean, chr_medians[name]
         
 
 
-
+"""for pile in sam.pileup("Chr4", 13000, 13100, truncate=True):
+        cov = 0
+	print pile.n, pile.pos, 
+        for reads in pile.pileups:
+            if reads.alignment.mapq >= mapq_cutoff:
+                cov = cov + 1
+         
+        print cov
+"""
