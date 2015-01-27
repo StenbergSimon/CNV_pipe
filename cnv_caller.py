@@ -2,29 +2,33 @@ import pysam
 import numpy
 import os
 import math
+from optparse import OptionParser as opt
 
 samfile = "/Users/Simon/up_91_3.Founder_003_trimmed.sorted_rmdup_gc-corrected.bam"
 mapq_cutoff = 1
 window_size = 100
 path = "/Users/Simon/output/"
 
-sam = pysam.AlignmentFile(samfile, "rb")
 """
-def covScanner(sam, mapq_cutoff, name, pos_start, pos_end):
-    WINDOW_COVS = []
-    for pile in sam.pileup(name, pos_start, pos_end, truncate=True):
-	cov = 0
-        for reads in pile.pileups:
-	    if reads.alignment.mapq >= mapq_cutoff:
-                cov = cov + 1
-	WINDOW_COVS.append(cov)
-    window_mean = float(sum(WINDOW_COVS)) / float(len(WINDOW_COVS))
-    return window_mean
+#Set the options that need to be set
+prsr = opt()
+prsr.add_option("-w", "--windowSize", dest="winsize", metavar="INT", default=500, help="Windowsize (bp) to be used to calculate log2ratio [Default:%default]")
+prsr.add_option("-m", "--mappingQuality", dest="mapq", metavar="INT", default=0, help="Mapping quality cutoff for reads to be used in the calculation [Default:%default]")
+prsr.add_option("-f", "--file", dest="bam", metavar="FILE", help="Input bam file to be analyzed")
+prsr.add_option("-o", "--ouput", dest="path", metavar="PATH", default=os.getcwd() ,help="Output path")
+prsr.add_option("-p", "--prefix", dest="prefix", metavar="DIR", default="Output_CNV_Caller", help="Specify the name of the output folder that will be created in output PATH [Default:%default]")
 
-def windowIterator(pos_start, pos_end, window_size):
-    pos_end = pos_end + window_size
-    pos_start = pos_start + window_size
-    return pos_start, pos_end
+# Get options
+(options, args) = prsr.parse_args()
+
+def checkFile(test_file):
+        if not os.path.isfile(test_file):
+                quit("Could not find the file:" + test_file)
+
+def checkValidArgs(options):
+        if options.bam == None:
+                quit("ERROR: No BAM file submitted")
+        checkFile(options.bam)
 """
 
 def getNames(sam):
@@ -36,7 +40,6 @@ def getNames(sam):
         NAMES.append(header_dict.get('SQ')[i].get('SN'))
         LENGTHS.append(header_dict.get('SQ')[i].get('LN'))
         i = i + 1
-    sam.close()
     return NAMES, LENGTHS
     
 def median(lst):
@@ -47,23 +50,23 @@ def getMedianCov(sam, NAMES, LENGTH, mapq_cutoff):
     for name, ln in zip(NAMES, LENGTH): 
        COVS = []
        for pile in sam.pileup(name, 0, ln):
-           cov = 0
-           for reads in pile.pileups:
-              if reads.alignment.mapq >= mapq_cutoff:
-                   cov = cov + 1
+           cov = pile.n
    	   COVS.append(cov)
        chr_median = median(COVS)
        medians_dict[name] = chr_median
     return medians_dict
 
-def getLogratio(window_mean, name, chr_medians):
+def getLogratios(WINDOW_MEANS, name, chr_medians):
     median = chr_medians[name]
-    win_logratio = window_mean / median
-    if win_logratio == 0: 
-        win_logratio = 0
-    else:
-        win_logratio = math.log(win_logratio, 2)
-    return win_logratio
+    LOG2RATIOS = []
+    for window_mean in WINDOW_MEANS:
+        win_logratio = window_mean / median
+        if win_logratio == 0: 
+           win_logratio = 0
+        else:
+           win_logratio = math.log(win_logratio, 2)
+        LOG2RATIOS.append(win_logratio)
+    return LOG2RATIOS
 
 def writeRscript(FILELIST):
     with open(os.path.join(path, "run_DNA_copy.r"), "w") as out:
@@ -72,6 +75,15 @@ def writeRscript(FILELIST):
 	p = 1
 	for line in FILELIST:
 	   out.write("".join(["c", str(p), "<- read.table(\"", line]))	
+
+class RWriter():
+   def __init__(self):
+      self.data = ()
+      
+   def writeHeader(self):
+      return None
+       
+
 
 class CovScanner():
   
@@ -98,18 +110,18 @@ class CovScanner():
        self.name = name
  
    def move(self, ln):
-       if self.pos_end < ln:
-          windowMean()
+       while self.pos_end < ln:
+          self.windowMean()
           self.pos_start = self.pos_start + self.window_size
           self.pos_end = self.pos_end + self.window_size
-       else:
-          return self.MEANS
+          #print len(self.MEANS) # This is actually not 1
+       return self.MEANS
   
    def windowMean(self):
        sam = pysam.AlignmentFile(samfile, "rb")
        WINDOW_COVS = []
+       cov = 0
        for pile in sam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
-          cov = 0
           for reads in pile.pileups:
              if reads.alignment.mapq >= mapq_cutoff:
                 cov = cov + 1
@@ -141,13 +153,21 @@ class FilePrinter():
 
        line = '\t'.join(map(str, data)) + "\n"
        self._fh.write(line)
+
+   def printListToFile(self, LIST):
+
+       if (self._fh is None):
+           raise Exception("Only use within with statement blocks")
+       for line in LIST:
+           self._fh.write("%s\n" % line)
        
 
 """ START """
 if __name__ == "__main__":
-	
-    NAMES, LENGTH = getNames(sam)
-    chr_medians = getMedianCov(sam, NAMES, LENGTH, mapq_cutoff)
+    
+    bam = pysam.AlignmentFile(samfile, "rb")	
+    NAMES, LENGTH = getNames(bam)
+    chr_medians = getMedianCov(bam, NAMES, LENGTH, mapq_cutoff)
 
     if not os.path.exists(path):
                     os.makedirs(path)
@@ -160,26 +180,7 @@ if __name__ == "__main__":
             scan.setWindowSize(window_size)
 	    scan.setName(name)
 	    WINDOW_MEANS = scan.move(ln)
-            out.printToFile(WINDOW_MEANS)
-    
-"""
-for name, ln  in zip(NAMES, LENGTH):
-    with FilePrinter(os.path.join(path, name)) as out:
-	pos_start = 0
-	pos_end = window_size
-	while pos_end <= ln:
-	   pos_start, pos_end = windowIterator(pos_start, pos_end, window_size)
-           window_mean = covScanner(sam, mapq_cutoff, name, pos_start, pos_end)
-	   out.printToFile(pos_start, pos_end, getLogratio(window_mean, name, chr_medians))
-        
-"""
+            WINDOW_MEANS = getLogratios(WINDOW_MEANS, name, chr_medians)
+	    out.printListToFile(WINDOW_MEANS)
 
-"""for pile in sam.pileup("Chr4", 13000, 13100, truncate=True):
-        cov = 0
-	print pile.n, pile.pos, 
-        for reads in pile.pileups:
-            if reads.alignment.mapq >= mapq_cutoff:
-                cov = cov + 1
-         
-        print cov
-"""
+    sam.close()    
