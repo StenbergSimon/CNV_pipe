@@ -65,6 +65,7 @@ def getLogratios(WINDOW_MEANS, name, chr_medians):
            win_logratio = 0
         else:
            win_logratio = math.log(win_logratio, 2)
+   #        print win_logratio, window_mean, median
         LOG2RATIOS.append(win_logratio)
     return LOG2RATIOS
 
@@ -114,21 +115,21 @@ class CovScanner():
           self.windowMean()
           self.pos_start = self.pos_start + self.window_size
           self.pos_end = self.pos_end + self.window_size
-          #print len(self.MEANS) # This is actually not 1
        return self.MEANS
   
    def windowMean(self):
        sam = pysam.AlignmentFile(samfile, "rb")
        WINDOW_COVS = []
-       cov = 0
+       cov = ()
        for pile in sam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
-          for reads in pile.pileups:
-             if reads.alignment.mapq >= mapq_cutoff:
-                cov = cov + 1
-       WINDOW_COVS.append(cov)
+           cov = 0
+	   for reads in pile.pileups:
+               if reads.alignment.mapq >= mapq_cutoff:
+                   cov = cov + 1
+	   WINDOW_COVS.append(cov)
+       window_mean = numpy.mean(WINDOW_COVS)    
+       self.MEANS.append(window_mean)
        sam.close()
-       window_mean = numpy.mean(WINDOW_COVS)
-       self.MEANS.append(window_mean)  
 
 class FilePrinter():
 
@@ -183,4 +184,4 @@ if __name__ == "__main__":
             WINDOW_MEANS = getLogratios(WINDOW_MEANS, name, chr_medians)
 	    out.printListToFile(WINDOW_MEANS)
 
-    sam.close()    
+    bam.close()    
