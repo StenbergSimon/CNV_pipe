@@ -4,27 +4,21 @@ import sys
 import os
 import math
 from optparse import OptionParser as opt
+from subprocess import call
 
-samfile = "/Users/Simon/up_91_3.Founder_003_trimmed.sorted_rmdup_gc-corrected.bam"
-mapq_cutoff = 1
-window_size = 100
-path = "/Users/Simon/output/"
-name_list = "/Users/Simon/chr.list"
-
-"""
 #Set the options that need to be set
 prsr = opt()
 prsr.add_option("-w", "--windowSize", dest="winsize", metavar="INT", default=500, help="Windowsize (bp) to be used to calculate log2ratio [Default:%default]")
 prsr.add_option("-m", "--mappingQuality", dest="mapq", metavar="INT", default=0, help="Mapping quality cutoff for reads to be used in the calculation [Default:%default]")
-prsr.add_option("-f", "--file", dest="bam", metavar="FILE", help="Input bam file to be analyzed")
+prsr.add_option("-f", "--file", dest="bam", metavar="FILE", help="Input bam file to be analyzed, should be sorted and indexed")
 prsr.add_option("-o", "--ouput", dest="path", metavar="PATH", default=os.getcwd() ,help="Output path")
-prsr.add_option("-p", "--prefix", dest="prefix", metavar="DIR", default="Output_CNV_Caller", help="Specify the name of the output folder that will be created in output PATH [Default:%default]")
 prsr.add_option("-l", "--name-list", dest="order", metavar="FILE", default=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "chr.list"),
-help="List of bam headers in order as they should be plotted, [Default:%default])
-prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%dedault]")
+help="List of bam headers in order as they should be plotted, [Default:%default]")
+prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%default]")
 
 # Get options
 (options, args) = prsr.parse_args()
+DEVNULL = open(os.devnull, 'wb')
 
 def checkFile(test_file):
         if not os.path.isfile(test_file):
@@ -34,10 +28,13 @@ def checkValidArgs(options):
         if options.bam == None:
                 quit("ERROR: No BAM file submitted")
         checkFile(options.bam)
-"""
 
-def getNames(sam):
-    header_dict = sam.header
+def setAbsPath(options):
+    options.path = os.path.abspath(options.path)
+    return options.path   
+
+def getNames(bam):
+    header_dict = bam.header
     NAMES = []
     LENGTHS = []
     i = 0
@@ -50,11 +47,11 @@ def getNames(sam):
 def median(lst):
     return numpy.median(numpy.array(lst))
 
-def getMedianCov(sam, NAMES, LENGTH, mapq_cutoff):
+def getMedianCov(bam, NAMES, LENGTH):
     medians_dict = {}
     for name, ln in zip(NAMES, LENGTH): 
        COVS = []
-       for pile in sam.pileup(name, 0, ln):
+       for pile in bam.pileup(name, 0, ln):
            cov = pile.n
    	   COVS.append(cov)
        chr_median = median(COVS)
@@ -73,14 +70,6 @@ def getLogratios(WINDOW_MEANS, name, chr_medians):
         LOG2RATIOS.append(win_logratio)
     return LOG2RATIOS
 
-def writeRscript(FILELIST):
-    with open(os.path.join(path, "run_DNA_copy.r"), "w") as out:
-        out.write("#!/usr/bin/env Rscript")
-        out.write("library(DNAcopy)")
-	p = 1
-	for line in FILELIST:
-	   out.write("".join(["c", str(p), "<- read.table(\"", line]))	
-
 class RWriter():
    
    def __init__(self, name_list):
@@ -93,10 +82,17 @@ class RWriter():
       self.main = ()
       self.name_list = open(name_list, "r")
       self.counter = 0
+      self.path = ()
       for name in self.name_list:
           self.counter = self.counter + 1
       self.name_list.seek(0)
+   
+   def getName(self):
+       return self.name
  
+   def setPath(self, path):
+       self.path = path
+
    def writeHeader(self):
       HEAD = ["#!/usr/bin/env Rscript", "library(DNAcopy)"]
       self.head = '\n'.join(HEAD) + '\n'
@@ -106,7 +102,7 @@ class RWriter():
       n = 1
       for name in self.name_list:
           name = name.rstrip()
-	  MID.append("c%s <- read.table(\"%s\")" % (n, name))
+	  MID.append("c%s <- read.table(\"%s\")" % (n, os.path.join(self.path, name)))
           n = n + 1
       n = 1
       self.name_list.seek(0)
@@ -132,7 +128,7 @@ class RWriter():
 		MERGE.append(str(n))
              n = n + 1
       MERGE.append(")")
-      MERGE.append("\npdf(\"cnv_report.pdf\")")
+      MERGE.append("\npdf(\"%s\")" % os.path.join(self.path, "cnv_report.pdf"))
       self.merge = ''.join(MERGE) + '\n'
       self.name_list.seek(0)     
   
@@ -178,7 +174,7 @@ class CovScanner():
        self.window_size = ()
        self.pos_start = 0
        self.pos_end = ()
-       self.samfile = ()
+       self.bamfile = ()
        self.name = ()
        self.mapq_cutoff = ()
        self.MEANS = []
@@ -188,11 +184,11 @@ class CovScanner():
        self.window_size = win
        self.pos_end = win
    
-   def setSamFile(self, sam):
-       self.samfile = sam
+   def setSamFile(self, bam):
+       self.bamfile = bam
    
    def setMapq(self, mapq):
-       self.mapq_cutoff = mapq
+       self.mapq_cutoff = int(mapq)
 
    def setName(self, name):
        self.name = name
@@ -206,13 +202,13 @@ class CovScanner():
        return self.MEANS, self.POS
   
    def windowMean(self):
-       sam = pysam.AlignmentFile(samfile, "rb")
+       bam = pysam.AlignmentFile(self.bamfile, "rb")
        WINDOW_COVS = []
        cov = ()
-       for pile in sam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
+       for pile in bam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
            cov = 0
 	   for reads in pile.pileups:
-               if reads.alignment.mapq >= mapq_cutoff:
+               if reads.alignment.mapq >= self.mapq_cutoff:
                    cov = cov + 1
 	   WINDOW_COVS.append(cov)
        if sum(WINDOW_COVS) > 0:
@@ -220,7 +216,7 @@ class CovScanner():
        else:
            window_mean = 0
        self.MEANS.append(window_mean)
-       sam.close()
+       bam.close()
 
 class FilePrinter():
 
@@ -257,28 +253,41 @@ class FilePrinter():
            self._fh.write("%s\t%s\n" % (line1, line2))    
 
 """ START """
+
 if __name__ == "__main__":
     
-    bam = pysam.AlignmentFile(samfile, "rb")	
-    NAMES, LENGTH = getNames(bam)
-    rscripter = RWriter(name_list)
-    rscripter.setName(os.path.join(path, "TestScript.r"))
-    rscripter.assembler()
+    options.path = setAbsPath(options)
+    
+    if not os.path.exists(options.path):
+       os.makedirs(options.path)
  
-    chr_medians = getMedianCov(bam, NAMES, LENGTH, mapq_cutoff)
-
-    if not os.path.exists(path):
-                    os.makedirs(path)
+    bam = pysam.AlignmentFile(options.bam, "rb")	
+    NAMES, LENGTH = getNames(bam)
+    
+    if bool(options.plot) == True:
+       rscripter = RWriter(options.order)
+       rscripter.setName(os.path.join(options.path, "run_DNAcopy.r"))
+       rscripter.setPath(options.path)
+       rscripter.assembler()
+ 
+    chr_medians = getMedianCov(bam, NAMES, LENGTH)
 
     for name, ln  in zip(NAMES, LENGTH):
-        with FilePrinter(os.path.join(path, name)) as out:
+        with FilePrinter(os.path.join(options.path, name)) as out:
             scan = CovScanner()
-	    scan.setSamFile(samfile)
-	    scan.setMapq(mapq_cutoff)
-            scan.setWindowSize(window_size)
+	    scan.setSamFile(options.bam)
+	    scan.setMapq(options.mapq)
+            scan.setWindowSize(options.winsize)
 	    scan.setName(name)
 	    WINDOW_MEANS, POS = scan.move(ln)
             WINDOW_MEANS = getLogratios(WINDOW_MEANS, name, chr_medians)
 	    out.printZipListToFile(WINDOW_MEANS, POS)
+ 
+    if bool(options.plot) == True:
+       cmd = ["Rscript", rscripter.getName()] 
+       call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+       rm_cmd = ["rm", rscripter.getName()]
+       call(rm_cmd)
 
-    bam.close()    
+    bam.close()
+    DEVNULL.close()
