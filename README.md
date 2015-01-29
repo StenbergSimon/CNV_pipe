@@ -6,16 +6,18 @@ Python script to call copy number variations from platform independent NGS data
 Usage: cnv_caller.py [options]
 
 Options:
-  -h, --help            show this help message and exit
+  -h, --help            
+
+                        show this help message and exit
   
   -w INT, --windowSize=INT
                         
-  Windowsize (bp) to be used to calculate log2ratio
+                        Windowsize (bp) to be used to calculate log2ratio
                         [Default:500]
   
   -m INT, --mappingQuality=INT
                         
-  Mapping quality cutoff for reads to be used in the
+                        Mapping quality cutoff for reads to be used in the
                         calculation [Default:0]
   
   -f FILE, --file=FILE  
@@ -25,21 +27,21 @@ Options:
   
   -o PATH, --ouput=PATH
                         
-  Output path
+                        Output path
   
   -l FILE, --name-list=FILE
                         
- List of bam headers in order as they should be
+                        List of bam headers in order as they should be
                         plotted, [Default:/Users/Simon/git/CNV_pipe/chr.list]
   
   -a BOOLEAN, --plot=BOOLEAN
                         
- Specify if plotting should be done using DNAcopy
+ 			Specify if plotting should be done using DNAcopy
                         [Default:True]
   
   -r FILE, --reference=FILE
                         
- Bam file to be used as refernce / control
+ 			Bam file to be used as refernce / control
 
 Developed by: Simon Stenberg
 
