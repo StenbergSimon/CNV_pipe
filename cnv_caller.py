@@ -219,7 +219,7 @@ class CovScanner():
           win_mean_ref = self.windowMean(self.ref)
           if win_mean_ref == 0:
              win_mean_ref = 1
-          logratio  = window_mean / (win_mean_ref * self.normalizer)
+          logratio  = (window_mean * self.normalizer) / win_mean_ref
        if logratio == 0:
           logratio = 0
        else:
