@@ -31,6 +31,8 @@ Developed by: Simon Stenberg
 Dependencies
 --------
 
+pysam (install: pip install pysam)
+
 R (developed in R version 3.1.0 (2014-04-10) -- "Spring Dance") - if -rall option is used
 
 R library DNAcopy http://www.bioconductor.org/packages/release/bioc/html/DNAcopy.html
@@ -59,3 +61,5 @@ Things to know about algorithm
 * Headers in both bams need to be identical
 
 * Output path does not have to exist, it will be created if it can be
+
+* List the bam headers (chromosome names) in a list to specify the order of chromosomes in plot. Example is included in repo (chr.list)
