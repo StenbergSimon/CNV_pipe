@@ -1,26 +1,44 @@
-CNV_pipe
+cnv_caller.py
 ========
 
-Pearl scripts involved in CNV calling from NGS data
+Python script to call copy number variations from platform independent NGS data
+
+Usage: cnv_caller.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -w INT, --windowSize=INT
+                        Windowsize (bp) to be used to calculate log2ratio
+                        [Default:500]
+  -m INT, --mappingQuality=INT
+                        Mapping quality cutoff for reads to be used in the
+                        calculation [Default:0]
+  -f FILE, --file=FILE  Input bam file to be analyzed, should be sorted and
+                        indexed
+  -o PATH, --ouput=PATH
+                        Output path
+  -l FILE, --name-list=FILE
+                        List of bam headers in order as they should be
+                        plotted, [Default:/Users/Simon/git/CNV_pipe/chr.list]
+  -a BOOLEAN, --plot=BOOLEAN
+                        Specify if plotting should be done using DNAcopy
+                        [Default:True]
+  -r FILE, --reference=FILE
+                        Bam file to be used as refernce / control
 
 Developed by: Simon Stenberg
 
 Dependencies
 --------
-Bedtools (Developed in v2.17.0)
-
-Samtools (Developed in 0.1.18)
-
-Bamtools (Developed in 2.3.0)
 
 R (developed in R version 3.1.0 (2014-04-10) -- "Spring Dance") - if -rall option is used
 
-R library ggplot2 (if -rall options is used)
+R library DNAcopy http://www.bioconductor.org/packages/release/bioc/html/DNAcopy.html
 
 Install
 -------
 
-Copy plot_cnv.r into ~/bin/
+Clone repo and go!
 
 Preceeding data handling
 -------
@@ -29,53 +47,15 @@ Preceeding data handling
 * Bam files must be sorted and indexed
 * Preferably use some kind of GC-correction. Deeptools is one example that can do this.
 
-
-Usage
---------
-
-Call the script followed with your sample .bam alignment and the preceding options
-
-cnv_pipe.pl sample.bam [options] > output.tsv
-
-The output is a file with the called windows that is atleast the cutoff value below or above 0.
-
-Options
---------
-
--w [int] sliding window size, bigger window decrease computanional time, decrease sensitivity and decrease false posetive rate (scales with read depth) Default: 500
-
--co [int] Cutoff value of log2 change compared to reference or name median to be called and placed in file
-
--rall prints out all window values even if cutoff is met or not, placed in separate folder (/reports/), also produces .pdf files with plots of all names
-
--incr [int] increments of the sliding window, controls overlap. Default: [windowsize] 
-
--mapq [int] mapping quality cutoff to include in the analysis. Default: [0]
-
--r Reference.bam reference alignment
-
--regex [regex] supply own regex to recognize the names in the alignment file, does not work at the moment. Default: (SN:)([^\s]+)
-
--h show help
-
---help show help
-
-Additional Info
---------
-You might find interesting scripts in variant_calling repo to complement the cnv_pipe.pl
-
-
-Known Bugs
+Caveats
 -------
 
-Increments =! Windowsize will currently give wrongly scaled outputs in position
+Things to know about algorithm
 
+* Minimal reference coverage assumed at each base for the reference = 1
 
-cnv_caller.py
--------
+* Without reference log2ratio is calculated with chromosome median coverage
 
-Things to know:
+* Headers in both bams need to be identical
 
-Minimal reference coverage assumed at each base for the reference = 1
-
-Without reference log2ratio is calculated with chromosome median coverage
+* Output path does not have to exist, it will be created if it can be
