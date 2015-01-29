@@ -36,12 +36,12 @@ Options:
   
   -a BOOLEAN, --plot=BOOLEAN
                         
- 			Specify if plotting should be done using DNAcopy
+                        pecify if plotting should be done using DNAcopy
                         [Default:True]
   
   -r FILE, --reference=FILE
                         
- 			Bam file to be used as refernce / control
+                        Bam file to be used as refernce / control
 
 Developed by: Simon Stenberg
 
