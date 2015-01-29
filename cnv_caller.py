@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import pysam
 import numpy
@@ -304,6 +303,7 @@ if __name__ == "__main__":
     else:
        ref = pysam.AlignmentFile(options.ref, "rb")
        normalizer = getNormalizer(bam, ref, NAMES, LENGTH)     
+    
     for name, ln  in zip(NAMES, LENGTH):
         with FilePrinter(os.path.join(options.path, name)) as out:
             scan = CovScanner()
