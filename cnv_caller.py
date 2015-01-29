@@ -59,6 +59,17 @@ def getMedianCov(bam, NAMES, LENGTH):
        medians_dict[name] = chr_median
     return medians_dict
 
+def getNormalizer(bam, ref, NAMES, LENGTH):
+    REF = []
+    BAM = []
+    for name, ln in zip(NAMES,LENGTH):
+        for bam_pile in bam.pileup(name, 0, ln):
+            BAM.append(bam_pile.n)
+        for ref_pile in ref.pileup(name, 0, ln):    
+            REF.append(ref_pile.n)
+    normalizer = sum(REF) / sum(BAM)
+    return normalizer
+
 class RWriter():
    
    def __init__(self, name_list):
@@ -170,6 +181,7 @@ class CovScanner():
        self.RATIOS = []
        self.POS = []
        self.medians = None
+       self.normalizer = ()
     
    def setWindowSize(self, win):
        self.window_size = win
@@ -181,7 +193,12 @@ class CovScanner():
    def setSamFile(self, bam, ref):
        self.bamfile = bam
        self.ref = ref
+       if self.ref is not None:
+          self.setNormalizer()
    
+   def setNormalizer(self, normalizer):
+       self.normalizer = normalizer
+       
    def setMapq(self, mapq):
        self.mapq_cutoff = int(mapq)
 
@@ -204,7 +221,7 @@ class CovScanner():
           win_mean_ref = self.windowMean(self.ref)
           if win_mean_ref == 0:
              win_mean_ref = 1
-          logratio  = window_mean / win_mean_ref
+          logratio  = window_mean / (win_mean_ref * self.normalizer)
        if logratio == 0:
           logratio = 0
        else:
@@ -268,7 +285,8 @@ class FilePrinter():
 if __name__ == "__main__":
     
     options.path = setAbsPath(options)
-    
+    normalizer = 0 
+
     if not os.path.exists(options.path):
        os.makedirs(options.path)
  
@@ -283,7 +301,10 @@ if __name__ == "__main__":
  
     if options.ref == None:
        chr_medians = getMedianCov(bam, NAMES, LENGTH)
-
+    else:
+       ref = pysam.AlignmentFile(options.ref, "rb")
+       normalizer = getNormalizer(bam, ref, NAMES, LENGTH)     
+ 
     for name, ln  in zip(NAMES, LENGTH):
         with FilePrinter(os.path.join(options.path, name)) as out:
             scan = CovScanner()
@@ -292,6 +313,7 @@ if __name__ == "__main__":
 	    scan.setSamFile(options.bam, options.ref)
 	    scan.setMapq(options.mapq)
             scan.setWindowSize(options.winsize)
+            scan.setNormalizer(normalizer)
 	    scan.setName(name)
 	    WINDOW_RATIOS, POS = scan.move(ln)
 	    out.printZipListToFile(WINDOW_RATIOS, POS)
