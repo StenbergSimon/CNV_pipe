@@ -15,6 +15,7 @@ prsr.add_option("-o", "--ouput", dest="path", metavar="PATH", default=os.getcwd(
 prsr.add_option("-l", "--name-list", dest="order", metavar="FILE", default=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "chr.list"),
 help="List of bam headers in order as they should be plotted, [Default:%default]")
 prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%default]")
+prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file to be used as refernce / control")
 
 # Get options
 (options, args) = prsr.parse_args()
@@ -57,18 +58,6 @@ def getMedianCov(bam, NAMES, LENGTH):
        chr_median = median(COVS)
        medians_dict[name] = chr_median
     return medians_dict
-
-def getLogratios(WINDOW_MEANS, name, chr_medians):
-    median = chr_medians[name]
-    LOG2RATIOS = []
-    for window_mean in WINDOW_MEANS:
-        win_logratio = window_mean / median
-        if win_logratio == 0: 
-           win_logratio = 0
-        else:
-           win_logratio = math.log(win_logratio, 2)
-        LOG2RATIOS.append(win_logratio)
-    return LOG2RATIOS
 
 class RWriter():
    
@@ -175,17 +164,23 @@ class CovScanner():
        self.pos_start = 0
        self.pos_end = ()
        self.bamfile = ()
+       self.ref = None
        self.name = ()
        self.mapq_cutoff = ()
-       self.MEANS = []
+       self.RATIOS = []
        self.POS = []
+       self.medians = None
     
    def setWindowSize(self, win):
        self.window_size = win
        self.pos_end = win
+ 
+   def setChrMedians(self, medians):
+       self.medians = medians
    
-   def setSamFile(self, bam):
+   def setSamFile(self, bam, ref):
        self.bamfile = bam
+       self.ref = ref
    
    def setMapq(self, mapq):
        self.mapq_cutoff = int(mapq)
@@ -195,14 +190,29 @@ class CovScanner():
  
    def move(self, ln):
        while self.pos_end < ln:
-          self.windowMean()
+          window_mean = self.windowMean(self.bamfile)
           self.POS.append(self.pos_end)
+          self.RATIOS.append(self.getLogratios(window_mean))
           self.pos_start = self.pos_start + self.window_size
           self.pos_end = self.pos_end + self.window_size
-       return self.MEANS, self.POS
+       return self.RATIOS, self.POS
   
-   def windowMean(self):
-       bam = pysam.AlignmentFile(self.bamfile, "rb")
+   def getLogratios(self, window_mean):
+       if self.ref == None:
+          logratio = window_mean / self.medians[self.name]
+       else:
+          win_mean_ref = self.windowMean(self.ref)
+          if win_mean_ref == 0:
+             win_mean_ref = 1
+          logratio  = window_mean / win_mean_ref
+       if logratio == 0:
+          logratio = 0
+       else:
+          logratio = math.log(logratio, 2)
+       return logratio
+
+   def windowMean(self, bam):
+       bam = pysam.AlignmentFile(bam, "rb")
        WINDOW_COVS = []
        cov = ()
        for pile in bam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
@@ -215,8 +225,9 @@ class CovScanner():
            window_mean = numpy.mean(WINDOW_COVS)    
        else:
            window_mean = 0
-       self.MEANS.append(window_mean)
        bam.close()
+       return window_mean
+
 
 class FilePrinter():
 
@@ -270,18 +281,20 @@ if __name__ == "__main__":
        rscripter.setPath(options.path)
        rscripter.assembler()
  
-    chr_medians = getMedianCov(bam, NAMES, LENGTH)
+    if options.ref == None:
+       chr_medians = getMedianCov(bam, NAMES, LENGTH)
 
     for name, ln  in zip(NAMES, LENGTH):
         with FilePrinter(os.path.join(options.path, name)) as out:
             scan = CovScanner()
-	    scan.setSamFile(options.bam)
+            if options.ref == None:
+               scan.setChrMedians(chr_medians)
+	    scan.setSamFile(options.bam, options.ref)
 	    scan.setMapq(options.mapq)
             scan.setWindowSize(options.winsize)
 	    scan.setName(name)
-	    WINDOW_MEANS, POS = scan.move(ln)
-            WINDOW_MEANS = getLogratios(WINDOW_MEANS, name, chr_medians)
-	    out.printZipListToFile(WINDOW_MEANS, POS)
+	    WINDOW_RATIOS, POS = scan.move(ln)
+	    out.printZipListToFile(WINDOW_RATIOS, POS)
  
     if bool(options.plot) == True:
        cmd = ["Rscript", rscripter.getName()] 
