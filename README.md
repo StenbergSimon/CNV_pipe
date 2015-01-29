@@ -69,3 +69,13 @@ Known Bugs
 -------
 
 Increments =! Windowsize will currently give wrongly scaled outputs in position
+
+
+cnv_caller.py
+-------
+
+Things to know:
+
+Minimal reference coverage assumed at each base for the reference = 1
+
+Without reference log2ratio is calculated with chromosome median coverage
