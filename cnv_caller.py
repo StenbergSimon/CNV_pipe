@@ -193,8 +193,6 @@ class CovScanner():
    def setSamFile(self, bam, ref):
        self.bamfile = bam
        self.ref = ref
-       if self.ref is not None:
-          self.setNormalizer()
    
    def setNormalizer(self, normalizer):
        self.normalizer = normalizer
