@@ -67,7 +67,7 @@ def getNormalizer(bam, ref, NAMES, LENGTH):
             BAM.append(bam_pile.n)
         for ref_pile in ref.pileup(name, 0, ln):    
             REF.append(ref_pile.n)
-    normalizer = sum(REF) / sum(BAM)
+    normalizer = float(sum(REF)) / float(sum(BAM))
     return normalizer
 
 class RWriter():
@@ -302,7 +302,6 @@ if __name__ == "__main__":
     else:
        ref = pysam.AlignmentFile(options.ref, "rb")
        normalizer = getNormalizer(bam, ref, NAMES, LENGTH)     
- 
     for name, ln  in zip(NAMES, LENGTH):
         with FilePrinter(os.path.join(options.path, name)) as out:
             scan = CovScanner()
