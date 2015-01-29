@@ -285,6 +285,7 @@ if __name__ == "__main__":
     options.path = setAbsPath(options)
     normalizer = 0 
 
+    print options.order
     if not os.path.exists(options.path):
        os.makedirs(options.path)
  
