@@ -50,7 +50,7 @@ Dependencies
 
 pysam (install: pip install pysam)
 
-R (developed in R version 3.1.0 (2014-04-10) -- "Spring Dance") - if -rall option is used
+R (developed in R version 3.1.0 (2014-04-10) -- "Spring Dance")
 
 R library DNAcopy http://www.bioconductor.org/packages/release/bioc/html/DNAcopy.html
 
