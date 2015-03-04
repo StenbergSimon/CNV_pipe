@@ -252,7 +252,7 @@ class CovScanner():
        iterator = self.pos_start
        for pile in bam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
            cov = 0
-           while pile.pos =! iterator:
+           while pile.pos != iterator:
                WINDOW_COVS.append(0)
                iterator = iterator + 1
 	   for reads in pile.pileups:
