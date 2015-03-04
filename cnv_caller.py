@@ -249,12 +249,17 @@ class CovScanner():
        bam = pysam.AlignmentFile(bam, "rb")
        WINDOW_COVS = []
        cov = ()
+       iterator = self.pos_start
        for pile in bam.pileup(self.name, self.pos_start, self.pos_end, truncate=True):
            cov = 0
+           while pile.pos =! iterator:
+               WINDOW_COVS.append(0)
+               iterator = iterator + 1
 	   for reads in pile.pileups:
                if reads.alignment.mapq >= self.mapq_cutoff:
                    cov = cov + 1
 	   WINDOW_COVS.append(cov)
+           iterator = iterator + 1
        if sum(WINDOW_COVS) > 0:
            window_mean = numpy.mean(WINDOW_COVS)    
        else:
