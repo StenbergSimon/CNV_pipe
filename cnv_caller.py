@@ -70,10 +70,22 @@ def getNormalizer(bam, ref, NAMES, LENGTH):
     REF = []
     BAM = []
     for name, ln in zip(NAMES,LENGTH):
-        for bam_pile in bam.pileup(name, 0, ln):
+	start_pos = 0
+        iterator = start_pos
+        for bam_pile in bam.pileup(name, start_pos, ln):
+            while bam_pile.pos != iterator:
+               COVS.append(0)
+               iterator = iterator + 1
             BAM.append(bam_pile.n)
-        for ref_pile in ref.pileup(name, 0, ln):    
+            iterator = iterator + 1
+        start_pos = 0
+        iterator = start_pos        
+        for ref_pile in ref.pileup(name, start_pos, ln):    
+            while ref_pile.pos != iterator:
+               REF.append(0)
+               iterator = iterator + 1
             REF.append(ref_pile.n)
+            iterator = iterator + 1
     normalizer = float(sum(REF)) / float(sum(BAM))
     return normalizer
 
