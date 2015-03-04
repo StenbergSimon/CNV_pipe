@@ -53,9 +53,15 @@ def getMedianCov(bam, NAMES, LENGTH):
     medians_dict = {}
     for name, ln in zip(NAMES, LENGTH): 
        COVS = []
-       for pile in bam.pileup(name, 0, ln):
+       start_pos = 0
+       iterator = start_pos
+       for pile in bam.pileup(name, start_pos, ln):
+           while pile.pos != iterator:
+	       COVS.append(0)
+               iterator = iterator + 1
            cov = pile.n
    	   COVS.append(cov)
+           iterator = iterator + 1
        chr_median = median(COVS)
        medians_dict[name] = chr_median
     return medians_dict
