@@ -141,6 +141,7 @@ class RWriter():
       MAIN.append("plot(CNA.segm, plot.type=\"w\")")      
       MAIN.append("plot(CNA.segm, plot.type=\"s\")")
       MAIN.append("plot(CNA.segm, plot.type=\"p\")")
+      MAIN.append("write.table(segments.summary(CNA.segm), file = \"%s\", sep=\"\\t\")" % os.path.join(self.path, "segments_summary.tsv"))
       n = 1
       for name in self.name_list:
          MAIN.append("c%s.object <- CNA(c%s$V1, c%s$chr, c%s$V2, data.type=(\"logratio\"), presorted=TRUE)" % (n,n,n,n))
