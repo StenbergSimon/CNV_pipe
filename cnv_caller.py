@@ -286,7 +286,6 @@ if __name__ == "__main__":
     
     options.path = setAbsPath(options)
     normalizer = 0 
-
     if not os.path.exists(options.path):
        os.makedirs(options.path)
  
@@ -311,8 +310,8 @@ if __name__ == "__main__":
             if options.ref == None:
                scan.setChrMedians(chr_medians)
 	    scan.setSamFile(options.bam, options.ref)
-	    scan.setMapq(options.mapq)
-            scan.setWindowSize(options.winsize)
+	    scan.setMapq(int(options.mapq))
+            scan.setWindowSize(int(options.winsize))
             scan.setNormalizer(normalizer)
 	    scan.setName(name)
 	    WINDOW_RATIOS, POS = scan.move(ln)
