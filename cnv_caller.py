@@ -17,6 +17,10 @@ prsr.add_option("-l", "--name-list", dest="order", metavar="FILE", default=os.pa
 help="List of bam headers in order as they should be plotted, [Default:%default]")
 prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%default]")
 prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file to be used as refernce / control")
+prsr.add_option("-s", "--zstart", dest="zstart", metavar="INT", help="Zoom: Start chromosomal location")
+prsr.add_option("-e", "--zend", dest="zend", metavar="INT", help="Zoom: End chromosomal location")
+prsr.add_option("-c", "--zchrom", dest="zchrom", metavar="STR", help="Zoom: Chromosome")
+prsr.add_option("-z", "--zoom", dest="z", action="store_true", help="Runs in zoom-mode on a prerun project")
 
 # Get options
 (options, args) = prsr.parse_args()
@@ -74,7 +78,7 @@ def getNormalizer(bam, ref, NAMES, LENGTH):
 class RWriter():
    
    def __init__(self, options):
-      self.options() = options
+      self.options = options
       self.data = ()
       self.fh = None
       self.name = ()
@@ -175,9 +179,23 @@ class RWriter():
    def writeZoom(self):
       ZOOM = []
       ZOOM.append("\npdf(\"%s\")" % os.path.join(self.path, str(options.zchrom) + "_" + str(options.zstart) + "_" + str(options.zend) + ".pdf"))
-      ZOOM.append("zoomIntoRegion(CNA.segm, chrom=%s, maploc.start=%s, maploc.end=%s, sampleid=\"Sample.1\"") 
+      ZOOM.append("zoomIntoRegion(CNA.segm, chrom=%s, maploc.start=%s, maploc.end=%s, sampleid=\"Sample.1\"") % options.zchrom, options.zstart, options.zend 
       ZOOM.append("dev.off()")
-      self.ZOOM = ''.join(ZOOM) + '\n'
+      self.zoom = ''.join(ZOOM) + '\n'
+
+   def aseembleZoom(self):
+       self.writeHeader()
+       self.writeMid()
+       self.writeMerger()
+       self.writeZoom()
+   
+   def zoomWriter(self, name):
+       self.fh = open(name, "w")
+       self.fh.write(self.head)
+       self.fh.write(self.mid)
+       self.fh.write(self.merge)
+       self.fh.write(self.main)
+       self.fh.close()
 
 class CovScanner():
   
