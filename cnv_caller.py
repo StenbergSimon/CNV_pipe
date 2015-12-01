@@ -16,7 +16,7 @@ prsr.add_option("-o", "--ouput", dest="path", metavar="PATH", default=os.getcwd(
 prsr.add_option("-l", "--name-list", dest="order", metavar="FILE", default=os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), "chr.list"),
 help="List of bam headers in order as they should be plotted, [Default:%default]")
 prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%default]")
-prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file to be used as refernce / control")
+prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file to be used as reference / control")
 
 group = optparse.OptionGroup(prsr,"Zoom mode", "Zoom into specified chromsomal location and store as a new separate plot. " "Activate by using -z/-zoom")
 group.add_option("-z", "--zoom", dest="zoom", action="store_true", help="Runs in zoom-mode on a prerun project")
