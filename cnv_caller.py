@@ -188,6 +188,7 @@ class RWriter():
        self.writeMid()
        self.writeMerger()
        self.writeZoom()
+       self.zoomWriter(self.name)
    
    def zoomWriter(self, name):
        self.fh = open(name, "w")
@@ -315,41 +316,46 @@ if __name__ == "__main__":
     normalizer = 0 
     if not os.path.exists(options.path):
        os.makedirs(options.path)
- 
-    bam = pysam.AlignmentFile(options.bam, "rb")	
-    NAMES, LENGTH = getNames(bam)
-    
-    if bool(options.plot) == True:
+    if options.zoom:
        rscripter = RWriter(options)
        rscripter.setName(os.path.join(options.path, "run_DNAcopy.r"))
        rscripter.setPath(options.path)
-       rscripter.assembler()
+       rscripter.aseembleZoom()
+    else: 
+       bam = pysam.AlignmentFile(options.bam, "rb")	
+       NAMES, LENGTH = getNames(bam)
+       
+       if bool(options.plot) == True:
+          rscripter = RWriter(options)
+          rscripter.setName(os.path.join(options.path, "run_DNAcopy.r"))
+          rscripter.setPath(options.path)
+          rscripter.assembler()
  
-    if options.ref == None:
-       chr_medians = getMedianCov(bam, NAMES, LENGTH)
-    else:
-       ref = pysam.AlignmentFile(options.ref, "rb")
-       normalizer = getNormalizer(bam, ref, NAMES, LENGTH)     
-    print "calculating log ratios..." 
-    for name, ln  in zip(NAMES, LENGTH):
-        with FilePrinter(os.path.join(options.path, name)) as out:
-            scan = CovScanner()
-            if options.ref == None:
-               scan.setChrMedians(chr_medians)
-	    scan.setSamFile(options.bam, options.ref)
-	    scan.setMapq(int(options.mapq))
-            scan.setWindowSize(int(options.winsize))
-            scan.setNormalizer(normalizer)
-	    scan.setName(name)
-	    WINDOW_RATIOS, POS = scan.move(ln)
-	    out.printZipListToFile(WINDOW_RATIOS, POS)
+       if options.ref == None:
+          chr_medians = getMedianCov(bam, NAMES, LENGTH)
+       else:
+          ref = pysam.AlignmentFile(options.ref, "rb")
+          normalizer = getNormalizer(bam, ref, NAMES, LENGTH)     
+       print "calculating log ratios..." 
+       for name, ln  in zip(NAMES, LENGTH):
+           with FilePrinter(os.path.join(options.path, name)) as out:
+               scan = CovScanner()
+               if options.ref == None:
+                  scan.setChrMedians(chr_medians)
+               scan.setSamFile(options.bam, options.ref)
+               scan.setMapq(int(options.mapq))
+               scan.setWindowSize(int(options.winsize))
+               scan.setNormalizer(normalizer)
+               scan.setName(name)
+               WINDOW_RATIOS, POS = scan.move(ln)
+               out.printZipListToFile(WINDOW_RATIOS, POS)
  
-    if bool(options.plot) == True:
-       print "running plot scripts..."
-       cmd = ["Rscript", rscripter.getName()] 
-       call(cmd, stdout=DEVNULL, stderr=DEVNULL)
-       rm_cmd = ["rm", rscripter.getName()]
-       call(rm_cmd)
+       if bool(options.plot) == True:
+          print "running plot scripts..."
+          cmd = ["Rscript", rscripter.getName()] 
+          call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+          rm_cmd = ["rm", rscripter.getName()]
+          call(rm_cmd)
 
-    bam.close()
+       bam.close()
     DEVNULL.close()
