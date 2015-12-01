@@ -73,7 +73,8 @@ def getNormalizer(bam, ref, NAMES, LENGTH):
 
 class RWriter():
    
-   def __init__(self, name_list):
+   def __init__(self, options):
+      self.options() = options
       self.data = ()
       self.fh = None
       self.name = ()
@@ -81,7 +82,7 @@ class RWriter():
       self.mid = ()
       self.merge = ()
       self.main = ()
-      self.name_list = open(name_list, "r")
+      self.name_list = open(options.order, "r")
       self.counter = 0
       self.path = ()
       for name in self.name_list:
@@ -131,14 +132,14 @@ class RWriter():
              n = n + 1
       MERGE.append(")")
       MERGE.append("\npdf(\"%s\")" % os.path.join(self.path, "cnv_report.pdf"))
+      MERGE.append("CNA.object <- CNA(merged$V1, merged$chr, merged$V2, data.type=(\"logratio\"), presorted=TRUE)")
+      MERGE.append("CNA.smooth <- smooth.CNA(CNA.object)")
+      MERGE.append("CNA.segm <- segment(CNA.smooth)")
       self.merge = ''.join(MERGE) + '\n'
       self.name_list.seek(0)     
   
    def writeMain(self):
       MAIN = []
-      MAIN.append("CNA.object <- CNA(merged$V1, merged$chr, merged$V2, data.type=(\"logratio\"), presorted=TRUE)")
-      MAIN.append("CNA.smooth <- smooth.CNA(CNA.object)")
-      MAIN.append("CNA.segm <- segment(CNA.smooth)")
       MAIN.append("plot(CNA.segm, plot.type=\"w\")")      
       MAIN.append("plot(CNA.segm, plot.type=\"s\")")
       MAIN.append("plot(CNA.segm, plot.type=\"p\")")
@@ -170,6 +171,13 @@ class RWriter():
       self.fh.write(self.merge)
       self.fh.write(self.main)
       self.fh.close()
+      
+   def writeZoom(self):
+      ZOOM = []
+      ZOOM.append("\npdf(\"%s\")" % os.path.join(self.path, str(options.zchrom) + "_" + str(options.zstart) + "_" + str(options.zend) + ".pdf"))
+      ZOOM.append("zoomIntoRegion(CNA.segm, chrom=%s, maploc.start=%s, maploc.end=%s, sampleid=\"Sample.1\"") 
+      ZOOM.append("dev.off()")
+      self.ZOOM = ''.join(ZOOM) + '\n'
 
 class CovScanner():
   
@@ -294,7 +302,7 @@ if __name__ == "__main__":
     NAMES, LENGTH = getNames(bam)
     
     if bool(options.plot) == True:
-       rscripter = RWriter(options.order)
+       rscripter = RWriter(options)
        rscripter.setName(os.path.join(options.path, "run_DNAcopy.r"))
        rscripter.setPath(options.path)
        rscripter.assembler()
