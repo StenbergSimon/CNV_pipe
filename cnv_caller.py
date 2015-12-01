@@ -17,10 +17,10 @@ prsr.add_option("-l", "--name-list", dest="order", metavar="FILE", default=os.pa
 help="List of bam headers in order as they should be plotted, [Default:%default]")
 prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%default]")
 prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file to be used as refernce / control")
+prsr.add_option("-z", "--zoom", dest="zoom", action="store_true", help="Runs in zoom-mode on a prerun project")
 prsr.add_option("-s", "--zstart", dest="zstart", metavar="INT", help="Zoom: Start chromosomal location")
 prsr.add_option("-e", "--zend", dest="zend", metavar="INT", help="Zoom: End chromosomal location")
 prsr.add_option("-c", "--zchrom", dest="zchrom", metavar="STR", help="Zoom: Chromosome")
-prsr.add_option("-z", "--zoom", dest="zoom", action="store_true", help="Runs in zoom-mode on a prerun project")
 
 # Get options
 (options, args) = prsr.parse_args()
