@@ -95,6 +95,7 @@ class RWriter():
        self.path = path
 
    def writeHeader(self):
+      print "writing R script..."
       HEAD = ["#!/usr/bin/env Rscript", "library(DNAcopy)"]
       self.head = '\n'.join(HEAD) + '\n'
 
@@ -303,7 +304,7 @@ if __name__ == "__main__":
     else:
        ref = pysam.AlignmentFile(options.ref, "rb")
        normalizer = getNormalizer(bam, ref, NAMES, LENGTH)     
-    
+    print "calculating log ratios..." 
     for name, ln  in zip(NAMES, LENGTH):
         with FilePrinter(os.path.join(options.path, name)) as out:
             scan = CovScanner()
@@ -318,6 +319,7 @@ if __name__ == "__main__":
 	    out.printZipListToFile(WINDOW_RATIOS, POS)
  
     if bool(options.plot) == True:
+       print "running plot scripts..."
        cmd = ["Rscript", rscripter.getName()] 
        call(cmd, stdout=DEVNULL, stderr=DEVNULL)
        rm_cmd = ["rm", rscripter.getName()]
