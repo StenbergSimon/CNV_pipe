@@ -4,11 +4,11 @@ import numpy
 import sys
 import os
 import math
-from optparse import OptionParser as opt
+import optparse
 from subprocess import call
 
 #Set the options that need to be set
-prsr = opt()
+prsr = optparse.OptionParser()
 prsr.add_option("-w", "--windowSize", dest="winsize", metavar="INT", default=500, help="Windowsize (bp) to be used to calculate log2ratio [Default:%default]")
 prsr.add_option("-m", "--mappingQuality", dest="mapq", metavar="INT", default=0, help="Mapping quality cutoff for reads to be used in the calculation [Default:%default]")
 prsr.add_option("-f", "--file", dest="bam", metavar="FILE", help="Input bam file to be analyzed, should be sorted and indexed")
@@ -17,10 +17,13 @@ prsr.add_option("-l", "--name-list", dest="order", metavar="FILE", default=os.pa
 help="List of bam headers in order as they should be plotted, [Default:%default]")
 prsr.add_option("-a", "--plot", dest="plot", metavar="BOOLEAN", default=True, help="Specify if plotting should be done using DNAcopy [Default:%default]")
 prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file to be used as refernce / control")
-prsr.add_option("-z", "--zoom", dest="zoom", action="store_true", help="Runs in zoom-mode on a prerun project")
-prsr.add_option("-s", "--zstart", dest="zstart", metavar="INT", help="Zoom: Start chromosomal location")
-prsr.add_option("-e", "--zend", dest="zend", metavar="INT", help="Zoom: End chromosomal location")
-prsr.add_option("-c", "--zchrom", dest="zchrom", metavar="STR", help="Zoom: Chromosome")
+
+group = optparse.OptionGroup(prsr,"Zoom mode", "Zoom into specified chromsomal location and store as a new separate plot. " "Activate by using -z/-zoom")
+group.add_option("-z", "--zoom", dest="zoom", action="store_true", help="Runs in zoom-mode on a prerun project")
+group.add_option("-s", "--zstart", dest="zstart", metavar="INT", help="Zoom: Start chromosomal location")
+group.add_option("-e", "--zend", dest="zend", metavar="INT", help="Zoom: End chromosomal location")
+group.add_option("-c", "--zchrom", dest="zchrom", metavar="STR", help="Zoom: Chromosome")
+prsr.add_option_group(group)
 
 # Get options
 (options, args) = prsr.parse_args()
