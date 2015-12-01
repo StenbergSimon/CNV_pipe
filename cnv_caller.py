@@ -20,7 +20,7 @@ prsr.add_option("-r", "--reference", dest="ref", metavar="FILE", help="Bam file 
 prsr.add_option("-s", "--zstart", dest="zstart", metavar="INT", help="Zoom: Start chromosomal location")
 prsr.add_option("-e", "--zend", dest="zend", metavar="INT", help="Zoom: End chromosomal location")
 prsr.add_option("-c", "--zchrom", dest="zchrom", metavar="STR", help="Zoom: Chromosome")
-prsr.add_option("-z", "--zoom", dest="z", action="store_true", help="Runs in zoom-mode on a prerun project")
+prsr.add_option("-z", "--zoom", dest="zoom", action="store_true", help="Runs in zoom-mode on a prerun project")
 
 # Get options
 (options, args) = prsr.parse_args()
@@ -84,6 +84,8 @@ class RWriter():
       self.name = ()
       self.head = ()
       self.mid = ()
+      self.zoom = ()
+      self.pdf = ()
       self.merge = ()
       self.main = ()
       self.name_list = open(options.order, "r")
@@ -120,6 +122,11 @@ class RWriter():
       self.mid = '\n'.join(MID) + '\n'
       self.name_list.seek(0)
 
+   def writePdf(self):
+      PDF=[]
+      PDF.append("pdf(\"%s\")" % os.path.join(self.path, "cnv_report.pdf"))
+      self.pdf = ''.join(PDF) + '\n'
+
    def writeMerger(self):
       MERGE = []
       MERGE.append("merged <- rbind(")
@@ -135,10 +142,9 @@ class RWriter():
 		MERGE.append(str(n))
              n = n + 1
       MERGE.append(")")
-      MERGE.append("\npdf(\"%s\")" % os.path.join(self.path, "cnv_report.pdf"))
-      MERGE.append("CNA.object <- CNA(merged$V1, merged$chr, merged$V2, data.type=(\"logratio\"), presorted=TRUE)")
-      MERGE.append("CNA.smooth <- smooth.CNA(CNA.object)")
-      MERGE.append("CNA.segm <- segment(CNA.smooth)")
+      MERGE.append("\nCNA.object <- CNA(merged$V1, merged$chr, merged$V2, data.type=(\"logratio\"), presorted=TRUE)")
+      MERGE.append("\nCNA.smooth <- smooth.CNA(CNA.object)")
+      MERGE.append("\nCNA.segm <- segment(CNA.smooth)")
       self.merge = ''.join(MERGE) + '\n'
       self.name_list.seek(0)     
   
@@ -164,6 +170,7 @@ class RWriter():
    def assembler(self):
       self.writeHeader()
       self.writeMid()
+      self.writePdf()
       self.writeMerger()
       self.writeMain()
       self.writer(self.name)
@@ -172,6 +179,7 @@ class RWriter():
       self.fh = open(name, "w")
       self.fh.write(self.head)
       self.fh.write(self.mid)
+      self.fh.write(self.pdf)
       self.fh.write(self.merge)
       self.fh.write(self.main)
       self.fh.close()
@@ -179,9 +187,9 @@ class RWriter():
    def writeZoom(self):
       ZOOM = []
       ZOOM.append("\npdf(\"%s\")" % os.path.join(self.path, str(options.zchrom) + "_" + str(options.zstart) + "_" + str(options.zend) + ".pdf"))
-      ZOOM.append("zoomIntoRegion(CNA.segm, chrom=%s, maploc.start=%s, maploc.end=%s, sampleid=\"Sample.1\"") % options.zchrom, options.zstart, options.zend 
+      ZOOM.append("zoomIntoRegion(CNA.segm, chrom=\"%s\", maploc.start=%s, maploc.end=%s, sampleid=\"Sample.1\")" % (options.zchrom, options.zstart, options.zend)) 
       ZOOM.append("dev.off()")
-      self.zoom = ''.join(ZOOM) + '\n'
+      self.zoom = '\n'.join(ZOOM) + '\n'
 
    def aseembleZoom(self):
        self.writeHeader()
@@ -195,7 +203,7 @@ class RWriter():
        self.fh.write(self.head)
        self.fh.write(self.mid)
        self.fh.write(self.merge)
-       self.fh.write(self.main)
+       self.fh.write(self.zoom)
        self.fh.close()
 
 class CovScanner():
@@ -316,11 +324,17 @@ if __name__ == "__main__":
     normalizer = 0 
     if not os.path.exists(options.path):
        os.makedirs(options.path)
+
     if options.zoom:
        rscripter = RWriter(options)
        rscripter.setName(os.path.join(options.path, "run_DNAcopy.r"))
        rscripter.setPath(options.path)
        rscripter.aseembleZoom()
+       cmd = ["Rscript", rscripter.getName()]
+       call(cmd, stdout=DEVNULL, stderr=DEVNULL)
+       rm_cmd = ["rm", rscripter.getName()]
+       call(rm_cmd)
+
     else: 
        bam = pysam.AlignmentFile(options.bam, "rb")	
        NAMES, LENGTH = getNames(bam)
